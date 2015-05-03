@@ -1,0 +1,1010 @@
+head	1.13;
+access;
+symbols;
+locks
+	jem4687:1.13; strict;
+comment	@// @;
+
+
+1.13
+date	2012.11.07.19.10.46;	author jem4687;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	2012.11.03.02.02.17;	author jem4687;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	2012.11.02.02.06.05;	author jem4687;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	2012.10.22.16.46.48;	author jem4687;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	2012.10.17.21.46.42;	author jem4687;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	2012.10.16.02.25.21;	author jem4687;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	2012.10.15.22.05.03;	author jem4687;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	2012.10.15.21.40.40;	author jem4687;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	2012.10.15.19.24.29;	author jem4687;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	2012.10.15.17.23.16;	author jem4687;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	2012.10.10.22.30.06;	author jem4687;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	2012.10.10.20.51.23;	author jem4687;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2012.10.10.20.02.57;	author jem4687;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.13
+log
+@Pretty up the comments
+@
+text
+@/**
+ * Name: takeaway.cpp
+ * Description:  The main for a Takeaway Game.
+ *
+ * $Id: takeaway.cpp,v 1.12 2012/11/03 02:02:17 jem4687 Exp jem4687 $
+ *
+ * Revisions:
+ * $Log: takeaway.cpp,v $
+ *
+ * Revision 1.3  2012/10/29 02:40:02  mal4012
+ * Minor comment changes.
+ *
+ * Revision 1.2  2012/10/25 00:45:24  jem4687
+ * Changed findsuccessors to receive a trip
+ *
+ * Revision 1.1  2012/10/20 22:11:47  mal4012
+ * Moved main into takeaway.cpp.
+ *
+ *
+ * @@author:Jesse Martinez
+ * @@author:Michael Loper
+ */
+
+#include <sstream>
+#include <iostream>
+#include <cstdlib>
+#include <cassert>
+#include <cstring>
+
+#include "TakeawayGame.h"
+#include "Game.h"
+
+using namespace std;
+
+/**
+ * Name: main
+ *
+ * Description:  Creates and runs a Takeaway Game.
+ *
+ * @@param argc   - The number of arguments entered.
+ *        argv[] - A pointer to an array of chars representing the arguments
+ *                 entered.
+ *
+ * @@return       0, to indicate a smooth program execution.
+ */
+int main( int argc, const char* argv[] ){
+	stringstream ss;
+	int thePennies;
+	const char* PLAY("play");
+	//Make sure there are two or three arguments.
+	if ( argc != 2 && argc != 3 ){
+		cerr << "Usage: " << argv[0] << " [play] num_pennies";
+		cout << endl;
+		exit( 1 );
+	}
+	//Enter solver mode for two arguments.
+	if ( argc == 2 ){
+		// Must receieve penny ammount greater than 0
+		string p = argv[1];
+		ss << p;
+		ss >> thePennies;
+		if ( p == "0" ){
+                        cout << "The best move is no move with a score of -1."
+                        << endl;
+                        exit( 1 );
+                }
+
+		if( !thePennies || thePennies < 0 ){
+			cerr << p << " is an invalid number of pennies to be"\
+				  " specified. " << endl;
+			exit(1);
+		}
+
+		// Create the game on the ammount of pennies given.
+		TakeawayGame t( thePennies );
+		if ( t.getData() == 0 )
+			cout << "No pennies in the pile the best move is to "\
+			"takeaway 0 pennies with a score of -1" << endl;
+		else{
+			triple<int,int,vector< vector<int> > >
+			b( t.getData(), 0, t.board );
+			//Find and print the best move and score.
+			triple<int,int,vector< vector<int> > > moved =
+			t.movePC( 0,t.findSuccessors( b ));
+			if ( moved.first != -1 )
+				cout << "Best ammount of pennies to take is " \
+				<< moved.second << endl;
+			else
+				cout << "Score is " << moved.first << \
+				" so default move to take 1." << endl;
+		}
+	}
+	// If there are three arguments enter interactive mode.
+	else if ( argc == 3 ){
+		// Make sure the first argument given is exactly "play".
+		if ( strcmp( PLAY,argv[1] )){
+			cerr << "Usage: " << argv[0] << " [play] num_pennies";
+               		cout << endl;
+                	exit( 1 );
+		}
+		// Pennies must be greater than or equal to zero.
+		string p = argv[2];
+                ss << p;
+                ss >> thePennies;
+		if ( p == "0" ){
+                        cout << "Starting with 0 pennies so no move can be"\
+                        " made and human player loses by default" << endl;
+                        exit( 1 );
+                }
+		if ( thePennies < 0 || !thePennies ){
+			cerr << p << " is an invalid number of pennies to be"\
+                                  " specified. " << endl;
+                        exit(1);
+                }
+		// Create a takeaway game in interactive mode.
+		TakeawayGame t( thePennies );
+		// Keeps track of turns
+	        int turn = 0;
+
+      	        // Runs game
+		while ( t.getData() != 0 ){
+                	if ( turn % 2 == 0 )
+                        	t.move( 1 );
+                	else
+                        	t.move( 2 );
+                	turn++;
+        	}
+		// When the game is over print out the loser.
+        	if (( turn-1 ) % 2 == 0 )
+                	cout << "Player " << t.getName( 1 ) << " loses" << endl;
+       		else
+                	cout << "Player " << t.getName( 2 ) << " loses" << endl;
+	}
+
+	return 0;
+}
+@
+
+
+1.12
+log
+@*** empty log message ***
+@
+text
+@d5 1
+a5 1
+ * $Id: takeaway.cpp,v 1.9 2012/10/29 02:40:02 mal4012 Exp jem4687 $
+d9 2
+a10 1
+ * Revision 1.9  2012/10/29 02:40:02  mal4012
+d13 1
+a13 1
+ * Revision 1.6  2012/10/25 00:45:24  jem4687
+d16 1
+a16 1
+ * Revision 1.5  2012/10/20 22:11:47  mal4012
+@
+
+
+1.11
+log
+@*** empty log message ***
+@
+text
+@@
+
+
+1.10
+log
+@*** empty log message ***
+@
+text
+@d5 1
+a5 1
+ * $Id: takeaway.cpp,v 1.5 2012/10/20 22:11:47 mal4012 Exp jem4687 $
+d9 6
+d23 1
+d45 4
+a48 1
+int main( int argc, char* argv[] ){
+a50 1
+		cout << argc << endl;
+d58 13
+a70 5
+		int p = atoi( argv[1] );
+		if ( p < 0 ){
+			cerr << "Invalid penny ammount, must be >= 0";
+                	cout << endl;
+                	exit( 1 );
+d72 1
+d74 1
+a74 1
+		Takeaway t( atoi( argv[1] ));
+d79 2
+d83 1
+a83 1
+			t.movePC( 0,t.findSuccessors( t.getData(),t.board ));
+d95 1
+a95 1
+		if ( strcmp( "play",argv[1] )){
+d101 6
+a106 3
+		if ( atoi( argv[2] ) < 0 ){
+                        cerr << "Invalid penny ammount, must be >= 0";
+                        cout << endl;
+d109 5
+d115 1
+a115 6
+		Takeaway t( 1,atoi( argv[2] ));
+		if ( t.getData() == 0 ){
+			cout << "Starting with 0 pennies so no move can be"\
+			" made and human player loses by default" << endl;
+			exit( 1 );
+		}
+@
+
+
+1.9
+log
+@*** empty log message ***
+@
+text
+@d1 15
+a15 81
+// $Id: takeaway.cpp,v 1.3 2012/10/17 21:43:02 mal4012 Exp jem4687 $
+//
+// Revisions:
+// $Log: takeaway.cpp,v $
+// Revision 1.3  2012/10/17 21:43:02  mal4012
+// Added play feature.
+//
+// Revision 1.9  2012/10/17 01:38:41  mal4012
+// Changed base cases.
+//
+// Revision 1.8  2012/10/16 02:28:28  jem4687
+// changed findsuccessor params
+//
+// Revision 1.8  2012/10/16 02:25:21  jem4687
+// added a few things to make work with new game(changed findsuccessors)
+//
+// Revision 1.7  2012/10/15 22:05:03  jem4687
+// added generateBoard
+//
+// Revision 1.6  2012/10/15 21:40:40  jem4687
+// added triple container
+//
+// Revision 1.7  2012/10/15 19:23:21  mal4012
+// Changed error prints.
+//
+// Revision 1.6  2012/10/15 18:05:07  mal4012
+// Changed a few formatting issues.
+//
+// Revision 1.5  2012/10/15 17:18:21  jem4687
+// *** empty log message ***
+//
+// Revision 1.3  2012/10/10 22:30:06  jem4687
+// included inhetiance
+//
+// Revision 1.2  2012/10/10 20:51:23  jem4687
+// added functions for inheritance
+//
+// Revision 1.1  2012/10/10 20:02:57  jem4687
+// Initial revision
+//
+// Revision 1.12  2012/10/03 03:59:49  jem4687
+// added standard error output
+//
+// Revision 1.11  2012/10/02 19:15:51  jem4687
+// *** empty log message ***
+//
+// Revision 1.10  2012/10/02 19:13:05  jem4687
+// added comments
+//
+// Revision 1.9  2012/10/01 23:29:00  jem4687
+// Correct!!!!!!!!!!
+//
+// Revision 1.8  2012/10/01 22:41:42  jem4687
+// testing
+//
+// Revision 1.7  2012/09/27 01:10:12  jem4687
+// remodeling with all functionality in takeaway
+//
+// Revision 1.6  2012/09/27 00:47:35  jem4687
+// debugging
+//
+// Revision 1.4  2012/09/23 21:22:48  jem4687
+// fixed some bugs so it compiles correctly
+//
+// Revision 1.3  2012/09/22 22:00:56  jem4687
+// added print and move functions
+//
+// Revision 1.2  2012/09/22 21:04:08  jem4687
+// Started
+//
+// Revision 1.1  2012/09/22 21:01:57  jem4687
+// Initial revision
+//
+//
+//
+//
+//
+//
+//
+// @@author:Jesse Martinez
+// @@author:Michael Loper
+d27 14
+a40 6
+// Creates and runs a takeaway game
+int main( int argc, char* argv[] )
+{
+	// Must receive atleast 2 params
+	if ( argc != 2 && argc != 3 )
+	{
+d46 2
+a47 2
+	if ( argc == 2 )
+	{
+d50 1
+a50 2
+		if ( p < 0 )
+		{
+d55 1
+d60 4
+a63 4
+		else
+		{
+			triple<int,int,vector< vector<int> > > moved = t.movePC( 0,t.findSuccessors( \
+			t.getData(),t.board ));
+d69 1
+a69 1
+				" so default move to take 1" << endl;
+d72 4
+a75 5
+	else if ( argc == 3 )
+	{
+		// Must receieve penny ammount greater than 0
+		if ( strcmp( "play",argv[1] ))
+		{
+d80 2
+a81 2
+		if ( atoi( argv[2] ) < 0 )
+                {
+d86 1
+d88 1
+a88 2
+		if ( t.getData() == 0 )
+		{
+d97 1
+a97 2
+		while ( t.getData() != 0 )
+        	{
+d104 1
+@
+
+
+1.8
+log
+@added a few things to make work with new game(changed findsuccessors)
+@
+text
+@d1 1
+a1 1
+// $Id: takeaway.cpp,v 1.7 2012/10/15 22:05:03 jem4687 Exp jem4687 $
+d5 12
+d88 2
+a89 2
+#include "takeaway.h"
+#include "game.h"
+a92 122
+// Creates a game of takeaway between user and pc with received pennies
+Takeaway::Takeaway( int , int apennies )
+	:Game( apennies ),p1( "X","Human" ),p2( "O","PC" )
+{}
+
+// Creates a game of takeaway between pc and pc with received pennies
+Takeaway::Takeaway( int apennies )
+	:Game( apennies ),p1( "X","Human" ),p2( "O","PC" )
+{}
+
+void Takeaway::generateBoard( vector<char> b )
+{
+	board.push_back( vector<int>(0) );
+}
+
+// Calls correct move function depending on received player number
+// removes ammount of pennies the player chose
+void Takeaway::move( int p )
+{
+	if ( p == 1 )
+	{
+		if ( p1.second == "Human" )
+			changeData( moveHuman( p1.first ));
+		else
+		{
+			pair<int,int> penny=movePC
+				( 0,findSuccessors( getData(), board ));
+       	                changeData( penny.second );
+			cout << "Player " << p1.first << " taking "
+				<< penny.second << " pennies" << endl;
+		}
+	}
+	else
+	{
+		if ( p2.second == "Human" )
+			changeData( moveHuman( p2.first ));
+		else
+		{
+			pair<int,int> penny=movePC
+				( 0,findSuccessors( getData(), board ));
+			changeData( penny.second );
+			cout << "Player " << p2.first << " taking "
+				<< penny.second << " pennies" << endl;
+		}
+	}
+	print();
+}
+
+// Move for human player asks user to choose an ammount from 1 to 3 if possible
+// @@return ammount of pennies chosen
+int Takeaway::moveHuman( string p )
+{
+	int num = 0;
+	do
+	{
+		cout << "Input number of pennies to takeaway (1,2,or 3)"
+			<< endl;
+		cin >> num;
+		if ( num <= 0 || num > 3 || num > getData() )
+			cout << "Taking too many or too few pennies" << endl;
+	}
+	while ( num <=0 || num > 3 || num > getData() );
+		cout << "Player " << p << " taking " << num << " pennies"
+			<< endl;
+	return num;
+}
+
+// Move for pc player recursively goes through possible moves to find best
+// ammount of pennies to take (defaults to 1 if there is no best ammount)
+// @@return a pair that holds the best score(score of best route)
+// and best move(ammount of pennies to take)
+pair<int,int> Takeaway::movePC( int turn,vector< triple<int,int,vector< vector<int> > > > successor )
+{
+	return solver( turn,successor );
+}
+
+// Finds all possible successors based on pennies received
+// @@return vector of successors
+vector< triple<int,int,vector< vector<int> > > > Takeaway:: findSuccessors( int p, vector< vector<int> > b )
+{
+	generateBoard( vector<char>('C') );
+	vector< triple<int,int,vector< vector<int> > > > successor;
+	for ( int i = 1; i <= 3; i++ )
+	{
+		if ( p - i >= 0 )
+		{
+			successor.push_back( triple<int,int,vector< vector<int> > > ( p-i,i,board ));
+		}
+	}
+	return successor;
+}
+
+// Prints a O for each penny left
+void Takeaway::print()
+{
+	for ( int i = 0; i < getData(); i++ )
+	{
+		cout << "0";
+	}
+	cout << endl;
+	cout << "Pennies left " << getData() << endl;
+}
+
+// @@return player received name
+string Takeaway::getName( int p )
+{
+	if ( p == 1 )
+		return p1.first;
+	else
+		return p2.first;
+}
+
+bool Takeaway::checkBaseCase( vector< triple<int,int,vector< vector<int> > > > check )
+{
+	return ( check.size() <= 1 );
+}
+
+pair<int,int> Takeaway::baseCase()
+{
+	return pair<int,int>( -1, 1 );
+}
+
+d120 1
+a120 1
+			pair<int,int> moved = t.movePC( 0,t.findSuccessors( \
+@
+
+
+1.7
+log
+@added generateBoard
+@
+text
+@d1 1
+a1 1
+// $Id: takeaway.cpp,v 1.6 2012/10/15 21:40:40 jem4687 Exp jem4687 $
+d5 3
+d107 1
+a107 1
+				( 0,findSuccessors( getData() ));
+d120 1
+a120 1
+				( 0,findSuccessors( getData() ));
+d159 1
+a159 1
+vector< triple<int,int,vector< vector<int> > > > Takeaway:: findSuccessors( int p )
+d231 1
+a231 1
+			t.getData() ));
+@
+
+
+1.6
+log
+@added triple container
+@
+text
+@d1 1
+a1 1
+// $Id: takeaway.cpp,v 1.7 2012/10/15 19:23:21 mal4012 Exp jem4687 $
+d5 3
+d88 5
+d158 1
+a158 2
+	vector< vector<int> > board;
+	board.push_back( vector<int>(0) );
+@
+
+
+1.5
+log
+@*** empty log message ***
+@
+text
+@d1 1
+a1 1
+// $Id: takeaway.cpp,v 1.4 2012/10/15 17:23:16 jem4687 Exp jem4687 $
+d5 8
+a12 2
+// Revision 1.4  2012/10/15 17:23:16  jem4687
+// added data calls instead of using pennies
+d63 1
+d76 2
+a77 2
+takeaway::takeaway( int , int apennies )
+	:game(apennies),p1("X","Human"),p2("O","PC")
+d81 2
+a82 2
+takeaway::takeaway( int apennies )
+	:game(apennies),p1("X","Human"),p2("O","PC")
+d87 1
+a87 1
+void takeaway::move(int p )
+d92 1
+a92 1
+			changeData(moveHuman(p1.first));
+d95 5
+a99 3
+			pair<int,int> penny=movePC( 0,findSuccessors( getData() ) );
+       	                changeData(penny.second);
+			cout << "Player " << p1.first << " taking " << penny.second << " pennies" << endl;
+d105 1
+a105 1
+			changeData(moveHuman(p2.first));
+d108 5
+a112 3
+			pair<int,int> penny=movePC( 0,findSuccessors( getData() ) );
+			changeData(penny.second);
+			cout << "Player " << p2.first << " taking " << penny.second << " pennies" << endl;
+d120 1
+a120 1
+int takeaway::moveHuman(string p)
+d125 2
+a126 1
+		cout << "Input number of pennies to takeaway (1,2,or 3)" << endl;
+d132 2
+a133 1
+	cout << "Player " << p << " taking " << num << " pennies" << endl;
+d137 2
+a138 2
+// Move for pc player recursively goes through possible moves to find best ammount of
+// pennies to take (defaults to 1 if there is no best ammount)
+d141 1
+a141 1
+pair<int,int> takeaway::movePC(int turn,vector< pair<int,int> > successor)
+d143 1
+a143 1
+	return solver(turn,successor);
+d148 1
+a148 1
+vector< pair<int,int> > takeaway:: findSuccessors( int p )
+d150 4
+a153 2
+	vector< pair<int,int> > successor;
+	for (int i = 1; i <= 3; i++)
+d157 1
+a157 1
+			successor.push_back(pair<int,int>(p-i,i));
+d164 1
+a164 1
+void takeaway::print()
+d166 1
+a166 1
+	for ( int i = 0; i < getData(); i++)
+d175 1
+a175 1
+string takeaway::getName( int p )
+d183 1
+a183 1
+bool takeaway::checkBaseCase( vector< pair<int,int> > check )
+d188 1
+a188 1
+pair<int,int> takeaway::baseCase()
+d190 1
+a190 1
+	return pair<int,int>(-1,1);
+d194 1
+a194 1
+int main(int argc, char* argv[])
+d200 1
+a200 1
+		cerr << "Invalid ammount of arguments (takeaway [play] num_pennies)";
+d202 1
+a202 1
+		exit(1);
+d204 1
+a204 1
+	if (argc == 2)
+d207 1
+a207 1
+		int p = atoi(argv[1]);
+d212 1
+a212 1
+                	exit(1);
+d214 1
+a214 1
+		takeaway t(atoi(argv[1]));
+d216 2
+a217 1
+			cout << "Starting with 0 pennies so no move can be made" << endl;
+d220 2
+a221 1
+			pair<int,int> moved = t.movePC(0,t.findSuccessors(t.getData()));
+d223 2
+a224 1
+				cout << "Best ammount of pennies to take is " << moved.second << endl;
+d226 2
+a227 1
+				cout << "Score is " << moved.first << " so default move to take 1" << endl; 
+d233 1
+a233 1
+		if ( strcmp("play",argv[1]) )
+d235 1
+a235 1
+			cerr << "Invalid ammount of arguments (takeaway [play] num_pennies)";
+d237 1
+a237 1
+                	exit(1);
+d239 1
+a239 1
+		if ( atoi(argv[2]) < 0 )
+d243 1
+a243 1
+                        exit(1);
+d245 1
+a245 1
+		takeaway t(1,atoi(argv[2]));
+d248 3
+a250 2
+			cout << "Starting with 0 pennies so no move can be made" << endl;
+			exit(1);
+d258 1
+a258 1
+                	if ( turn % 2 == 0)
+d264 2
+a265 2
+        	if ( (turn-1) % 2 == 0)
+                	cout << "Player " << t.getName(1) << " loses" << endl;
+d267 1
+a267 1
+                	cout << "Player " << t.getName(2) << " loses" << endl;
+@
+
+
+1.4
+log
+@added data calls instead of using pennies
+@
+text
+@d1 1
+a1 1
+// $Id: takeaway.cpp,v 1.3 2012/10/10 22:30:06 jem4687 Exp jem4687 $
+d5 3
+d124 1
+a124 1
+// Move for pc player recursively goes through possible moves to find best ammount of 
+d126 1
+a126 1
+// @@return a pair that holds the best score(score of best route) 
+@
+
+
+1.3
+log
+@included inhetiance
+@
+text
+@d1 1
+a1 1
+// $Id: takeaway.cpp,v 1.2 2012/10/10 20:51:23 jem4687 Exp jem4687 $
+d5 3
+d67 2
+a68 7
+{
+	pennies = apennies;
+	p1.first="X";
+	p1.second="Human";
+	p2.first="O";
+	p2.second="PC";
+}
+d72 2
+a73 7
+{
+	pennies = apennies;
+	p1.first="X";
+	p1.second="PC";
+	p2.first="O";
+	p2.second="PC";
+}
+d82 1
+a82 1
+			pennies-=moveHuman(p1.first);
+d85 2
+a86 2
+			pair<int,int> penny=movePC( 0,findSuccessors( pennies ) );
+       	                pennies-=penny.second;
+d93 1
+a93 1
+			pennies-=moveHuman(p2.first);
+d96 2
+a97 2
+			pair<int,int> penny=movePC( 0,findSuccessors( pennies ) );
+			pennies-=penny.second;
+d113 1
+a113 1
+		if ( num <= 0 || num > 3 || num > pennies )
+d116 1
+a116 1
+	while ( num <=0 || num > 3 || num > pennies );
+d127 1
+a127 25
+	int bScore = -99;
+        int bMove = -99;
+
+	if ( checkBaseCase(successor) )
+	{
+		return baseCase();
+	}
+	else
+	{
+		for ( int i = 0; i < successor.size(); i++)
+		{
+			pair<int,int> score = movePC( turn++, findSuccessors( successor.at(i).first ));
+
+			// Negates score
+			score.first = -(score.first);
+
+			// Compares new score to best score so far
+			if ( score.first > bScore )
+			{
+				bScore = score.first;
+				bMove = successor.at(i).second;
+			}
+		}
+		return pair<int,int>(bScore,bMove);
+	}
+d139 1
+a139 4
+			pair<int,int> pp;
+			pp.first = p-i;
+			pp.second = i;
+			successor.push_back(pp);
+d148 1
+a148 1
+	for ( int i = 0; i < pennies; i++)
+d153 1
+a153 7
+	cout << "Pennies left " << pennies << endl;
+}
+
+// @@return ammount of pennies left
+int takeaway::getPennies()
+{
+	return pennies;
+a185 1
+	game* tp;
+d197 1
+a197 2
+		tp = &t;
+		if ( t.getPennies() == 0 )
+d201 1
+a201 1
+			pair<int,int> moved = tp->solver(0,tp->findSuccessors(t.getPennies()));
+d224 1
+a224 2
+		tp = &t;
+		if ( t.getPennies() == 0 )
+d233 1
+a233 1
+		while ( t.getPennies() != 0 )
+d236 1
+a236 1
+                        	tp->move( 1 );
+d238 1
+a238 1
+                        	tp->move( 2 );
+@
+
+
+1.2
+log
+@added functions for inheritance
+@
+text
+@d1 1
+a1 1
+// $Id: takeaway.cpp,v 1.1 2012/10/10 20:02:57 jem4687 Exp jem4687 $
+d5 3
+d54 2
+a55 1
+#include <assert.h>
+d58 1
+d145 1
+a145 2
+			pair<int,int> score;
+			score = movePC( turn++, findSuccessors( successor.at(i).first ));
+d207 1
+a207 1
+	return ( check.size() == 1 );
+d226 1
+a226 1
+	takeaway t(1,5);
+d237 2
+a238 1
+		t = takeaway(atoi(argv[1]));
+d243 1
+a243 1
+			pair<int,int> moved = t.movePC(0,t.findSuccessors(t.getPennies()));
+d253 1
+a253 2
+		cout << argv[1] << endl;
+		/*if ( argv[1] != "play" )
+a254 1
+			cout << argc << endl;
+d258 1
+a258 1
+		}*/
+d265 2
+a266 1
+		t = takeaway(1,atoi(argv[2]));
+d279 1
+a279 1
+                        	t.move( 1 );
+d281 1
+a281 1
+                        	t.move( 2 );
+d284 1
+a284 1
+        	if ( turn-1 % 2 == 0)
+a287 1
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 1
+// $Id: takeaway.cpp,v 1.12 2012/10/03 03:59:49 jem4687 Exp jem4687 $
+d5 3
+d87 1
+a87 1
+			pair<int,int> penny=movePC( 0,findSuccessors( pennies ),0 );
+d98 1
+a98 1
+			pair<int,int> penny=movePC( 0,findSuccessors( pennies ),0 );
+d127 1
+a127 1
+pair<int,int> takeaway::movePC(int turn,vector< pair<int,int> > successor, int i)
+d132 1
+a132 1
+	if ( successor.size() <= 1 )
+d134 1
+a134 4
+		pair<int,int> p;
+    		p.first = -1;
+		p.second = 1;
+		return p;
+d141 1
+a141 1
+			score = movePC( turn++, findSuccessors( successor.at(i).first ) , i);
+d144 1
+a144 1
+			score.first = -1 * score.first;
+d153 1
+a153 4
+		pair<int,int> p;
+		p.first = bScore;
+		p.second = bMove;
+		return p;
+d201 10
+d238 1
+a238 1
+			pair<int,int> moved = t.movePC(0,t.findSuccessors(t.getPennies()),0);
+@

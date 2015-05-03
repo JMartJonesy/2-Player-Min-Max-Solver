@@ -1,0 +1,747 @@
+head	1.5;
+access;
+symbols;
+locks
+	jem4687:1.5; strict;
+comment	@// @;
+
+
+1.5
+date	2012.11.07.19.10.46;	author jem4687;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	2012.11.03.02.02.17;	author jem4687;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	2012.11.02.02.06.05;	author jem4687;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	2012.10.22.16.46.48;	author jem4687;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2012.10.17.21.46.42;	author jem4687;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@Pretty up the comments
+@
+text
+@/**
+ * Name: TakeawayGame.cpp
+ * Description:  A Takeaway Game starts with an initial pile of pennies and
+ *               players alternate turns taking 1, 2, or 3 pennies.  The
+ *               player to take the last penny loses.
+ *
+ * $Id: TakeawayGame.cpp,v 1.4 2012/11/03 02:02:17 jem4687 Exp jem4687 $
+ *
+ * Revisions:
+ * $Log: TakeawayGame.cpp,v $
+ *
+ * Revision 1.21  2012/10/29 02:40:02  mal4012
+ * Minor comment changes.
+ *
+ * Revision 1.20  2012/10/25 00:44:28  jem4687
+ * Changed findsuccessors to receive a trip
+ *
+ * Revision 1.19  2012/10/24 21:24:38  mal4012
+ * Improved speed of the solver for takeaway.
+ *
+ * Revision 1.18  2012/10/21 18:16:29  mal4012
+ * Changed comments.
+ *
+ * Revision 1.17  2012/10/16 02:28:28  jem4687
+ * changed findsuccessor params
+ *
+ * Revision 1.16  2012/10/15 22:05:03  jem4687
+ * added generateBoard
+ *
+ * Revision 1.15  2012/10/15 21:40:40  jem4687
+ * added triple container
+ *
+ * Revision 1.14  2012/10/15 19:23:21  mal4012
+ * Changed error prints.
+ *
+ * Revision 1.13  2012/10/15 18:05:07  mal4012
+ * Changed a few formatting issues.
+ *
+ * Revision 1.12  2012/10/10 22:30:06  jem4687
+ * included inhetiance
+ *
+ * Revision 1.11  2012/10/10 20:51:23  jem4687
+ * added functions for inheritance
+ *
+ * Revision 1.10  2012/10/03 03:59:49  jem4687
+ * added standard error output
+ *
+ * Revision 1.9  2012/10/02 19:13:05  jem4687
+ * added comments
+ *
+ * Revision 1.8  2012/10/01 23:29:00  jem4687
+ * Correct!!!!!!!!!!
+ *
+ * Revision 1.7  2012/10/01 22:41:42  jem4687
+ * testing
+ *
+ * Revision 1.6  2012/09/27 01:10:12  jem4687
+ * remodeling with all functionality in takeaway
+ *
+ * Revision 1.5  2012/09/27 00:47:35  jem4687
+ * debugging
+ *
+ * Revision 1.4  2012/09/23 21:22:48  jem4687
+ * fixed some bugs so it compiles correctly
+ *
+ * Revision 1.3  2012/09/22 22:00:56  jem4687
+ * added print and move functions
+ *
+ * Revision 1.2  2012/09/22 21:04:08  jem4687
+ * Started
+ *
+ * Revision 1.1  2012/09/22 21:01:57  jem4687
+ * Initial revision
+ *
+ *
+ * @@author:Jesse Martinez
+ * @@author:Michael Loper
+ */
+
+#include <iostream>
+#include <cstdlib>
+#include <cassert>
+#include <cstring>
+#include <sstream>
+
+#include "TakeawayGame.h"
+#include "Game.h"
+
+using namespace std;
+
+//Typedef for our created triple type.
+typedef triple< int, int, vector< vector<int> > > trip;
+
+/**
+ * Constructor
+ *
+ * Description:  Creates a game of takeaway between the user and pc with
+ *               the initial amount of pennies received.
+ *
+ * @@param int      -  A "dummy" int to differentiate the interactive mode from
+ *                    the solver mode.
+ *        apennies -  The initial amount of pennies in the pile.
+ */
+TakeawayGame::TakeawayGame( int , int apennies )
+	:Game( apennies ),p1( "X","Human" ),p2( "O","PC" ){
+	generateBoard( vector<string>() );
+}
+
+/**
+ * Constructor
+ *
+ * Description:  Creates a game of takeaway to be ran in solver mode.
+ *
+ * @@param apennies -  The initial amount of pennies in the pile.
+ */
+TakeawayGame::TakeawayGame( int apennies )
+	:Game( apennies ),p1( "X","Human" ),p2( "O","PC" ){
+	generateBoard( vector<string>() );
+}
+
+/**
+ * Name: generateBoard
+ *
+ * Description: Creates an empty board.  This function is implemnted in the
+ *              other games.
+ *
+ * @@param b     - The board.
+ */
+void TakeawayGame::generateBoard(  vector<string> ){
+	board.push_back( vector<int>() );
+	board[0].push_back( -1 );
+}
+
+/**
+ * Name: move
+ *
+ * Description:  Calls the proper move function based on the received player
+ *               number.  Removes the ammount of pennies the player chose.
+ *
+ * @@param p      - The number representing whose turn it is.
+ */
+void TakeawayGame::move( const int p ){
+	trip b( getData(), 0 , board );
+	if ( p == 1 ){
+		if ( p1.second == "Human" )
+			changeData( moveHuman( p1.first ));
+		else{
+			trip penny = movePC( 0, findSuccessors( b ));
+       	                changeData( penny.second );
+			cout << "Player " << p1.first << " taking "
+				<< penny.second << " pennies" << endl;
+		}
+	}
+	else {
+		if ( p2.second == "Human" )
+			changeData( moveHuman( p2.first ));
+		else {
+			trip penny = movePC( 0,findSuccessors( b ));
+			changeData( penny.second );
+			cout << "Player " << p2.first << " taking "
+				<< penny.second << " pennies" << endl;
+		}
+	}
+	print();
+}
+
+/**
+ * Name: moveHuman
+ *
+ * Description: Asks for user input on how many pennies to take away.
+ *
+ * @@param p    - A string representing either player "X" or "O".
+ *
+ * @@return     The number of pennies chosen.
+ */
+int TakeawayGame::moveHuman( const string p ){
+	string num;
+	int theAmount;
+	do {
+		cout << "Input number of pennies to takeaway (1,2,or 3)"
+			<< endl;
+		cin >> num;
+		stringstream ss( num );
+		ss >> theAmount;
+		if ( theAmount <= 0 || theAmount > 3 || theAmount > getData() 
+			|| !theAmount )
+			cout << "Invalid number of pennies!" << endl;
+	}
+	while ( theAmount <=0 || theAmount > 3 || theAmount > getData() || 
+		!theAmount );
+		cout << "Player " << p << " taking " << num << " pennies"
+			<< endl;
+	return theAmount;
+}
+
+/**
+ * Name: movePC
+ *
+ * Description: Move for PC player calls the solver algorithm to find the best
+ *              possible move given the current successor.
+ *
+ * @@param turn       - Integer to keep track of the turn.
+ *        successor  - The current successor of a takeaway configuration.
+ *
+ * @@return      A triple that holds the best score, the best move, and the
+ *              best board.
+ */
+trip TakeawayGame::movePC( const int turn,vector< trip > successor ){
+	return solver( turn,successor );
+}
+
+/**
+ * Name: findSuccessors
+ *
+ * Description: Generates all possible valid moves.
+ *
+ * @@param b     - The current board, number of pennies to takeaway, and the
+ *		number of pennies remaining.
+ *
+ * @@return      A vector of all the successors.
+ */
+vector< trip > TakeawayGame::findSuccessors( trip b ){
+	vector< vector<int> > newBoard( b.board );
+	vector< trip > successor;
+	for ( int i = 1; i <= 3; i++ ){
+		if ( b.first - i >= 0 ){
+			newBoard[0][0] = b.first - i;
+			successor.push_back( trip( b.first-i, i, newBoard ));
+		}
+	}
+	return successor;
+}
+
+/**
+ * Name: print
+ *
+ * Description: Prints an "O" to standard output for each penny left.
+ */
+void TakeawayGame::print(){
+	for ( int i = 0; i < getData(); i++ ){
+		cout << "0";
+	}
+	cout << endl;
+	cout << "Pennies left " << getData() << endl;
+}
+
+/**
+ * Name: getName
+ *
+ * Description: Returns the name of the player received.
+ *
+ * @@param p     - An integer representing whose turn it is.
+ *
+ * @@return      String representation of the current player.
+ */
+string TakeawayGame::getName( const int p ) const{
+	if ( p == 1 )
+		return p1.first;
+	else
+		return p2.first;
+}
+
+/**
+ * Name: checkBaseCase
+ *
+ * Description:  Determines if a base case as been reached.
+ *
+ * @@param check  - A vector of the remaining moves.
+ *
+ * @@return       True iff there are one or less remaining moves.
+ */
+bool TakeawayGame::checkBaseCase( const vector< trip > check ) const{
+	return ( check.size() == 0 );
+}
+
+/**
+ * Name: baseCase
+ *
+ * Description: Returns a standard base case representation for the takeaway
+ *              game.  For this game it is a score of 1 a move of 0 and an
+ *              empty board.
+ *
+ * @@return      A triple with a score, move, and board.
+ */
+trip TakeawayGame::baseCase() const{
+	vector< vector<int> > b;
+	return trip( 1, 0, b );
+}
+
+
+/**
+ * Name: invert
+ *
+ * Description: A dummy function to only be used in Connect3Game.
+ *
+ * @@return      A board.
+ */
+vector< vector<int> > TakeawayGame::invert( vector< vector<int> > b ){
+	return b;
+}
+@
+
+
+1.4
+log
+@*** empty log message ***
+@
+text
+@d7 1
+a7 1
+ * $Id: TakeawayGame.cpp,v 1.13 2012/10/29 02:40:02 mal4012 Exp jem4687 $
+d11 2
+a12 1
+ * Revision 1.13  2012/10/29 02:40:02  mal4012
+d15 1
+a15 1
+ * Revision 1.22  2012/10/25 00:44:28  jem4687
+d18 1
+a18 1
+ * Revision 1.21  2012/10/24 21:24:38  mal4012
+d21 1
+a21 1
+ * Revision 1.20  2012/10/21 18:16:29  mal4012
+d24 1
+a24 1
+ * Revision 1.19  2012/10/16 02:28:28  jem4687
+d27 1
+a27 1
+ * Revision 1.18  2012/10/15 22:05:03  jem4687
+d30 1
+a30 1
+ * Revision 1.17  2012/10/15 21:40:40  jem4687
+d33 1
+a33 1
+ * Revision 1.16  2012/10/15 19:23:21  mal4012
+d36 1
+a36 1
+ * Revision 1.15  2012/10/15 18:05:07  mal4012
+d39 1
+a39 1
+ * Revision 1.14  2012/10/10 22:30:06  jem4687
+d42 1
+a42 1
+ * Revision 1.13  2012/10/10 20:51:23  jem4687
+d45 1
+a45 1
+ * Revision 1.12  2012/10/03 03:59:49  jem4687
+d48 1
+a48 4
+ * Revision 1.11  2012/10/02 19:15:51  jem4687
+ * *** empty log message ***
+ *
+ * Revision 1.10  2012/10/02 19:13:05  jem4687
+d51 1
+a51 1
+ * Revision 1.9  2012/10/01 23:29:00  jem4687
+d54 1
+a54 1
+ * Revision 1.8  2012/10/01 22:41:42  jem4687
+d57 1
+a57 1
+ * Revision 1.7  2012/09/27 01:10:12  jem4687
+d60 1
+a60 1
+ * Revision 1.6  2012/09/27 00:47:35  jem4687
+@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@d7 1
+a7 1
+ * $Id: TakeawayGame.cpp,v 1.7 2012/10/21 18:16:29 mal4012 Exp jem4687 $
+d11 2
+a12 2
+ * Revision 1.7  2012/10/21 18:16:29  mal4012
+ * Changed comments.
+d14 2
+a15 2
+ * Revision 1.6  2012/10/21 03:04:07  mal4012
+ * Redid comments.
+d17 2
+a18 2
+ * Revision 1.5  2012/10/18 03:22:10  p334-04e
+ * works now
+d20 2
+a21 11
+ * Revision 1.4  2012/10/18 02:32:52  jem4687
+ * WORKS!!!
+ *
+ * Revision 1.1  2012/10/17 21:46:42  jem4687
+ * Initial revision
+ *
+ * Revision 1.3  2012/10/17 21:43:02  mal4012
+ * Added play feature.
+ *
+ * Revision 1.9  2012/10/17 01:38:41  mal4012
+ * Changed base cases.
+d23 1
+a23 1
+ * Revision 1.8  2012/10/16 02:28:28  jem4687
+d26 1
+a26 4
+ * Revision 1.8  2012/10/16 02:25:21  jem4687
+ * added a few things to make work with new game(changed findsuccessors)
+ *
+ * Revision 1.7  2012/10/15 22:05:03  jem4687
+d29 1
+a29 1
+ * Revision 1.6  2012/10/15 21:40:40  jem4687
+d32 1
+a32 1
+ * Revision 1.7  2012/10/15 19:23:21  mal4012
+d35 1
+a35 1
+ * Revision 1.6  2012/10/15 18:05:07  mal4012
+d38 1
+a38 4
+ * Revision 1.5  2012/10/15 17:18:21  jem4687
+ * *** empty log message ***
+ *
+ * Revision 1.3  2012/10/10 22:30:06  jem4687
+d41 1
+a41 1
+ * Revision 1.2  2012/10/10 20:51:23  jem4687
+a43 3
+ * Revision 1.1  2012/10/10 20:02:57  jem4687
+ * Initial revision
+ *
+d86 1
+d106 4
+a109 2
+Takeaway::Takeaway( int , int apennies )
+	:Game( apennies ),p1( "X","Human" ),p2( "O","PC" ){}
+d118 4
+a121 2
+Takeaway::Takeaway( int apennies )
+	:Game( apennies ),p1( "X","Human" ),p2( "O","PC" ){}
+d131 3
+a133 2
+void Takeaway::generateBoard( vector<string> b ){
+	board.push_back( vector<int>( 0 ));
+d144 2
+a145 1
+void Takeaway::move( int p ){
+d150 1
+a150 1
+			trip penny=movePC( 0,findSuccessors( getData(),board ));
+d155 2
+a156 1
+	} else {
+d160 1
+a160 1
+			trip penny=movePC( 0,findSuccessors( getData(),board ));
+d178 3
+a180 2
+int Takeaway::moveHuman( string p ){
+	int num = 0;
+d185 5
+a189 2
+		if ( num <= 0 || num > 3 || num > getData() )
+			cout << "Taking too many or too few pennies" << endl;
+d191 2
+a192 1
+	while ( num <=0 || num > 3 || num > getData() );
+d195 1
+a195 1
+	return num;
+d210 1
+a210 1
+trip Takeaway::movePC( int turn,vector< trip > successor ){
+d219 2
+a220 2
+ * @@param p     - The number of pennies left in the pile.
+ *        b     - The current board.
+d224 2
+a225 2
+vector< trip > Takeaway::findSuccessors( int p, vector< vector<int> > b ){
+	generateBoard( vector<string>() );
+d228 3
+a230 2
+		if ( p - i >= 0 ){
+			successor.push_back( trip( p-i,i,board ));
+d241 1
+a241 1
+void Takeaway::print(){
+d258 1
+a258 1
+string Takeaway::getName( int p ){
+d274 1
+a274 1
+bool Takeaway::checkBaseCase( vector< trip > check ){
+d287 1
+a287 1
+trip Takeaway::baseCase(){
+d290 12
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 98
+a98 81
+// $Id: TakeawayGame.cpp,v 1.3 2012/10/17 21:43:02 mal4012 Exp jem4687 $
+//
+// Revisions:
+// $Log: TakeawayGame.cpp,v $
+// Revision 1.3  2012/10/17 21:43:02  mal4012
+// Added play feature.
+//
+// Revision 1.9  2012/10/17 01:38:41  mal4012
+// Changed base cases.
+//
+// Revision 1.8  2012/10/16 02:28:28  jem4687
+// changed findsuccessor params
+//
+// Revision 1.8  2012/10/16 02:25:21  jem4687
+// added a few things to make work with new game(changed findsuccessors)
+//
+// Revision 1.7  2012/10/15 22:05:03  jem4687
+// added generateBoard
+//
+// Revision 1.6  2012/10/15 21:40:40  jem4687
+// added triple container
+//
+// Revision 1.7  2012/10/15 19:23:21  mal4012
+// Changed error prints.
+//
+// Revision 1.6  2012/10/15 18:05:07  mal4012
+// Changed a few formatting issues.
+//
+// Revision 1.5  2012/10/15 17:18:21  jem4687
+// *** empty log message ***
+//
+// Revision 1.3  2012/10/10 22:30:06  jem4687
+// included inhetiance
+//
+// Revision 1.2  2012/10/10 20:51:23  jem4687
+// added functions for inheritance
+//
+// Revision 1.1  2012/10/10 20:02:57  jem4687
+// Initial revision
+//
+// Revision 1.12  2012/10/03 03:59:49  jem4687
+// added standard error output
+//
+// Revision 1.11  2012/10/02 19:15:51  jem4687
+// *** empty log message ***
+//
+// Revision 1.10  2012/10/02 19:13:05  jem4687
+// added comments
+//
+// Revision 1.9  2012/10/01 23:29:00  jem4687
+// Correct!!!!!!!!!!
+//
+// Revision 1.8  2012/10/01 22:41:42  jem4687
+// testing
+//
+// Revision 1.7  2012/09/27 01:10:12  jem4687
+// remodeling with all functionality in takeaway
+//
+// Revision 1.6  2012/09/27 00:47:35  jem4687
+// debugging
+//
+// Revision 1.4  2012/09/23 21:22:48  jem4687
+// fixed some bugs so it compiles correctly
+//
+// Revision 1.3  2012/09/22 22:00:56  jem4687
+// added print and move functions
+//
+// Revision 1.2  2012/09/22 21:04:08  jem4687
+// Started
+//
+// Revision 1.1  2012/09/22 21:01:57  jem4687
+// Initial revision
+//
+//
+//
+//
+//
+//
+//
+// @@author:Jesse Martinez
+// @@author:Michael Loper
+d110 13
+a122 1
+// Creates a game of takeaway between user and pc with received pennies
+d124 1
+a124 2
+	:Game( apennies ),p1( "X","Human" ),p2( "O","PC" )
+{}
+d126 7
+a132 1
+// Creates a game of takeaway between pc and pc with received pennies
+d134 1
+a134 2
+	:Game( apennies ),p1( "X","Human" ),p2( "O","PC" )
+{}
+d136 10
+a145 4
+//TODO
+void Takeaway::generateBoard( vector<char> b )
+{
+	board.push_back( vector<int>(0) );
+d148 10
+a157 6
+// Calls correct move function depending on received player number
+// removes ammount of pennies the player chose
+void Takeaway::move( int p )
+{
+	if ( p == 1 )
+	{
+d160 2
+a161 4
+		else
+		{
+			triple<int,int,vector< vector<int> > > penny=movePC
+				( 0,findSuccessors( getData(), board ));
+d166 1
+a166 3
+	}
+	else
+	{
+d169 2
+a170 4
+		else
+		{
+			triple<int,int,vector< vector<int> > > penny=movePC
+				( 0,findSuccessors( getData(), board ));
+d179 10
+a188 4
+// Move for human player asks user to choose an ammount from 1 to 3 if possible
+// @@return ammount of pennies chosen
+int Takeaway::moveHuman( string p )
+{
+d190 1
+a190 2
+	do
+	{
+d203 13
+a215 6
+// Move for pc player recursively goes through possible moves to find best
+// ammount of pennies to take (defaults to 1 if there is no best ammount)
+// @@return a pair that holds the best score(score of best route)
+// and best move(ammount of pennies to take)
+triple<int,int,vector< vector<int> > > Takeaway::movePC( int turn,vector< triple<int,int,vector< vector<int> > > > successor )
+{
+d219 16
+a234 13
+// Finds all possible successors based on pennies received
+// @@return vector of successors
+vector< triple<int,int,vector< vector<int> > > > Takeaway::
+findSuccessors( int p, vector< vector<int> > b )
+{
+	generateBoard( vector<char>('C') );
+	vector< triple<int,int,vector< vector<int> > > > successor;
+	for ( int i = 1; i <= 3; i++ )
+	{
+		if ( p - i >= 0 )
+		{
+			successor.push_back( triple<int,int,
+			vector< vector<int> > > ( p-i,i,board ));
+d240 7
+a246 5
+// Prints a O for each penny left
+void Takeaway::print()
+{
+	for ( int i = 0; i < getData(); i++ )
+	{
+d253 10
+a262 3
+// @@return player received name
+string Takeaway::getName( int p )
+{
+d269 11
+a279 5
+//TODO
+bool Takeaway::checkBaseCase( vector< triple<int,int,
+				vector< vector<int> > > > check )
+{
+	return ( check.size() <= 1 );
+d282 10
+a291 3
+//TODO
+triple<int,int,vector< vector<int> > > Takeaway::baseCase()
+{
+d293 1
+a293 1
+	return triple<int,int,vector< vector<int > > >( -1, 1, b );
+@

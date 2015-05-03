@@ -1,0 +1,771 @@
+head	1.6;
+access;
+symbols;
+locks
+	jem4687:1.6; strict;
+comment	@// @;
+
+
+1.6
+date	2012.11.07.19.10.46;	author jem4687;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	2012.11.03.02.02.17;	author jem4687;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	2012.11.02.02.06.05;	author jem4687;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	2012.10.22.16.46.48;	author jem4687;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	2012.10.17.23.58.42;	author jem4687;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2012.10.17.21.46.42;	author jem4687;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.6
+log
+@Pretty up the comments
+@
+text
+@/**
+ * Name: KaylesGame.cpp
+ *
+ * Description:  A Kayles Game is a row of pins where players alternate
+ *               knocking down pins.  A player can choose to knock down one
+ *               or any two adjacent pins.  The player to knock down the last
+ *               pin wins.
+ *
+ * $Id: KaylesGame.cpp,v 1.5 2012/11/03 02:02:17 jem4687 Exp jem4687 $
+ *
+ * Revisions:
+ * $Log: KaylesGame.cpp,v $
+ *
+ * Revision 1.11  2012/10/29 02:40:02  mal4012
+ * Minor comment changes.
+ *
+ * Revision 1.10  2012/10/25 00:45:24  jem4687
+ * Changed findsuccessors to receive a trip
+ *
+ * Revision 1.9  2012/10/22 16:59:31  mal4012
+ * Fixed an unsigned int warning.
+ *
+ * Revision 1.8  2012/10/22 16:53:04  mal4012
+ * Removed warnings.
+ *
+ * Revision 1.7  2012/10/21 18:16:29  mal4012
+ * Changed comments.
+ *
+ * Revision 1.6  2012/10/21 03:04:07  mal4012
+ * Redid comments.
+ *
+ * Revision 1.5  2012/10/18 03:22:10  p334-04e
+ * works now
+ *
+ * Revision 1.4  2012/10/17 21:43:02  mal4012
+ * Added play feature.
+ *
+ * Revision 1.3  2012/10/17 01:38:41  mal4012
+ * Changed base cases.
+ *
+ * Revision 1.2  2012/10/16 02:29:08  jem4687
+ * added functionality to print
+ *
+ * Revision 1.1  2012/10/16 02:25:21  jem4687
+ * Initial revision
+ *
+ *
+ *
+ * @@author:Jesse Martinez
+ * @@author:Michael Loper
+ */
+
+#include <sstream>
+#include <iostream>
+#include <cstdlib>
+#include <cassert>
+#include <cstring>
+
+#include "KaylesGame.h"
+#include "Game.h"
+
+using namespace std;
+
+//Typedef for our created triple type.
+typedef triple< int, int, vector< vector<int> > > trip;
+
+/**
+ * Constructor
+ *
+ * Description:  Creates a game of kayles between the user and the pc with
+ *               the initial amount of pins and board received.
+ *
+ * @@param int    - A "dummy" int to differentiate the interactive mode from
+ *                 the solver mode.
+ *        pins   - The initial amount of pins in the row.
+ *        b      - A vector of strings representing the pins.
+ */
+KaylesGame::KaylesGame( const int , int pins , vector<string> b )
+	:Game( pins ),p1( "X","Human" ),p2( "O","PC" ){
+	generateBoard( b );
+}
+
+/**
+ * Constructor
+ *
+ * Description:  Creates a game of kayles to be ran in solver mode.
+ *
+ * @@param pins   - The initial amount of pins in the row.
+ *        b      - A vector of strings representing the pins.
+ */
+KaylesGame::KaylesGame( int pins , vector<string> b )
+	:Game( pins ),p1( "X","Human" ),p2( "O","PC" ){
+	generateBoard( b );
+}
+
+/**
+ * Name:  generateBoard
+ *
+ * Description: Generates the board with 1's and 0's based off of the strings
+ *              received from the command line arguments.
+ *
+ * @@param b     - The board.
+ */
+void KaylesGame::generateBoard( vector<string> b ){
+	board.push_back( vector<int>() );
+	for( unsigned i = 0; i < b.size(); ++i ){
+		for( int j = 0; j < atoi( b[i].c_str() ); ++j )
+			board[0].push_back( 1 );
+		if( i != b.size() - 1 )
+			board[0].push_back( 0 );
+	}
+}
+
+/**
+ * Name: move
+ *
+ * Description:  Calls the proper move function based on the received player
+ *               number.  Removes the ammount of pins the player chose.
+ *
+ * @@param p      - The number representing whose turn it is.
+ */
+void KaylesGame::move( const int p ){
+	trip b( getData(), 0 ,board );
+	if ( p == 1 ){
+		if ( p1.second == "Human" )
+			changeData( moveHuman( p1.first ));
+		else{
+			trip pin = movePC( 0, findSuccessors( b ) );
+       	                changeData( pin.second );
+			cout << "Player " << p1.first << " taking "
+				<< pin.second << " pins" << endl;
+		}
+	}
+	else{
+		if ( p2.second == "Human" )
+			changeData( moveHuman( p2.first ));
+		else{
+			trip pin = movePC( 0,findSuccessors( b ));
+			changeData( pin.second );
+			cout << "Player " << p2.first << " taking "
+				<< pin.second << " pins" << endl;
+		}
+	}
+	print();
+}
+
+/**
+ * Name: moveHuman
+ *
+ * Description: Asks for user input on how many pins to take away.
+ *
+ * @@param p     - A string representing either player "X" or "O".
+ *
+ * @@return      The number of pins chosen.
+ */
+int KaylesGame::moveHuman( const string p ){
+	int num = 0;
+	int col = 0;
+	bool take2 = true;
+	int bSize = board[0].size();
+	string theAmount;
+	string theCol;
+	do {
+		take2 = true;
+		// Print the current board
+		cout << "The current board is: ";
+		print();
+		cout << "Input number of pins to take away (1,2)"
+			<< endl;
+		cin >> theAmount;
+		stringstream ss( theAmount );
+		ss >> num;
+		// Make sure the number of pins is either one or two and there
+		// are enough pins remaining to take.
+		if ( num <= 0 || num > 2 || ( getData() - num ) < 0 ||
+			( !num && theAmount != "0" ))
+			cerr << "Invalid number of pins to take" << endl;
+		else {
+			cout << "Input column starting with column 0 "\
+                                "(if taking 2 pins choose left most column"\
+				" of pair)" << endl;
+			// Take the column from user input.
+			cin >> theCol;
+			stringstream ss2( theCol );
+			ss2 >> col;
+			// Make sure there is a pin at the column.
+			if( col < 0 || col > bSize ||
+				board[0][col] == 0 || ( !col && theCol != "0" ))
+				cerr << "Invalid column" << endl;
+			if( num == 2 ){
+				// If we are taking two make sure there is a
+				// pin in the second column.
+				if (( col+1 ) < board[0].size() ){
+					if ( board[0][col+1] == 0 ){
+						cerr << "Cant take"\
+						" 2 from this column"
+						<< endl;
+						take2 = false;
+					}
+				} else {
+					cerr << "Cant take 2 from this"
+						" column" << endl;
+					take2 = false;
+				}
+			}
+                }
+	}
+	// Keep looping until we have a valid number of pins, a valid column,
+	// and a valid second column if there is one.  ( We set take2 to true
+	// for a valid second column ).
+	while ( num <= 0 || num > 3 || ( getData() - num ) < 0 || col < 0
+		|| col > bSize || board[0][col] == 0 || !take2 || 
+		( !num && theAmount != "0" ) || ( !col && theCol != "0" ));
+		cout << "Player " << p << " taking " << num << " pins"
+			<< endl;
+	// Update the board.
+	board[0][col] = 0;
+	if( num == 2 )
+		board[0][col+1] = 0;
+	return num;
+}
+
+/**
+ * Name: movePC
+ *
+ * Description: Move for PC player calls the solver algorithim to find the best
+ *              possible move given for the current successor, and sets the
+ *              board to the best possible board.
+ *
+ * @@param turn      - Integer to keep track of the turn.
+ *        successor - The current successor of a kayles configuration.
+ *
+ * @@return      A triple that holds the best score, the best move, and the
+ *		best board.
+ */
+trip KaylesGame::movePC( const int turn, vector< trip > successor ){
+	trip solved = solver( turn,successor );
+	board = solved.board;
+	return solved;
+}
+
+/**
+ * Name: findSuccessors
+ *
+ * Description: Generates all possible valid moves.
+ *
+ * @@param       b     - The current board, the number of pins to take away, and
+ *			the number of remaining pins.
+ *
+ * @@return      A vector of all the successors.
+ */
+vector< trip > KaylesGame::findSuccessors( trip b ){
+	vector< trip > successor;
+	// Can only take one or two pins.
+	for ( unsigned int i = 1; i < 3; ++i ){
+		// Loop through the row of pins.
+		for ( unsigned int j = 0; j < b.board[0].size(); ++j ){
+			vector< vector<int> > newBoard( b.board );
+			// If we are at a move of only one pin.
+			if( i == 1 )
+				// If there is a pin remove it from the board
+				// copy and add the move to the vector of
+				// sucessors.
+				if( newBoard[0][j] == 1 ){
+					newBoard[0][j] = 0;
+					successor.push_back(
+					trip( b.first-i,i,newBoard ));
+				}
+			// Repeat the process for two pins verifying we have
+			// two adjacent pins.
+			if( i == 2 )
+				if( newBoard[0][j] == 1 )
+					if( j + 1 < newBoard[0].size() )
+						if( newBoard[0][j+1] == 1 ){
+							newBoard[0][j] = 0;
+							newBoard[0][j+1] = 0;
+							successor.push_back(
+							trip( b.first-i,i,newBoard ));
+						}
+		}
+	}
+	return successor;
+}
+
+/**
+ * Name: print
+ *
+ * Description: Prints an "X" for each pin left and "_" for missing pins.
+ */
+void KaylesGame::print(){
+	for ( unsigned i = 0; i < board[0].size(); i++ ){
+		if( board[0][i] == 1 )
+			cout << "X";
+		else
+			cout << "_";
+	}
+	cout << endl;
+}
+
+/**
+ * Name: getName
+ *
+ * Description: Returns the name of the player received.
+ *
+ * @@param p     - An integer representing whose turn it is.
+ *
+ * @@return      String representation of the current player.
+ */
+string KaylesGame::getName( const int p ) const{
+	if ( p == 1 )
+		return p1.first;
+	else
+		return p2.first;
+}
+
+/**
+ * Name: checkBaseCase
+ *
+ * Description:  Determines if a base case as been reached.
+ *
+ * @@param check  - A vector of the remaining moves.
+ *
+ * @@return       True iff there are no remaining moves.
+ */
+bool KaylesGame::checkBaseCase( const vector< trip > check ) const{
+	return ( check.size() == 0 );
+}
+
+/**
+ * Name: baseCase
+ *
+ * Description: Returns a standard base case representation for the kayles
+ *              game.  For this game it is a score of -1 a move of 0 and an
+ *              empty board.
+ *
+ * @@return      A triple witha score, move, and board.
+ */
+trip KaylesGame::baseCase() const{
+	vector< vector<int> > b;
+	return trip( -1, 0, b );
+}
+
+/**
+ * Name: invert
+ *
+ * Description: A dummy function to only be used in Connect3Game.
+ *
+ * @@return      A board.
+ */
+vector< vector<int> > KaylesGame::invert( vector< vector<int> > b ) {
+        return b;
+}
+@
+
+
+1.5
+log
+@*** empty log message ***
+@
+text
+@d9 1
+a9 1
+ * $Id: KaylesGame.cpp,v 1.13 2012/10/29 02:40:02 mal4012 Exp jem4687 $
+d13 2
+a14 1
+ * Revision 1.13  2012/10/29 02:40:02  mal4012
+@
+
+
+1.4
+log
+@*** empty log message ***
+@
+text
+@d184 1
+a184 1
+			ss >> col;
+d210 1
+a210 1
+	while ( num <=0 || num > 3 || ( getData() - num ) < 0 || col < 0
+@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@d9 1
+a9 1
+ * $Id: KaylesGame.cpp,v 1.7 2012/10/21 18:16:29 mal4012 Exp jem4687 $
+d13 12
+d34 1
+a34 10
+ * Revision 1.4  2012/10/18 02:32:07  jem4687
+ * WORKS!!!!!!!!!!
+ *
+ * Revision 1.2  2012/10/17 23:58:42  jem4687
+ * added memoization
+ *
+ * Revision 1.1  2012/10/17 21:46:42  jem4687
+ * Initial revision
+ *
+ * Revision 1.3  2012/10/17 21:43:02  mal4012
+d52 1
+d77 1
+a77 1
+Kayles::Kayles( int , int pins , vector<string> b )
+d90 1
+a90 1
+Kayles::Kayles( int pins , vector<string> b )
+d103 1
+a103 1
+void Kayles::generateBoard( vector<string> b ){
+d106 1
+a106 1
+		for( unsigned int j = 0; j < atoi( b[i].c_str() ); ++j )
+d121 2
+a122 1
+void Kayles::move( int p ){
+d127 1
+a127 1
+			trip pin = movePC( 0,findSuccessors( getData(),board ));
+d137 1
+a137 1
+			trip pin = movePC( 0,findSuccessors( getData(),board ));
+d155 1
+a155 1
+int Kayles::moveHuman( string p ){
+d159 3
+d169 3
+a171 1
+		cin >> num;
+d174 3
+a176 2
+		if ( num <= 0 || num > 2 || ( getData() - num ) < 0  )
+			cerr << "Taking too many or too few pins" << endl;
+d182 3
+a184 1
+			cin >> col;
+d186 2
+a187 2
+			if( col < 0 || col > board[0].size() ||
+				board[0][col] == 0 )
+d189 1
+a189 1
+			if( num == 2 )
+d199 1
+a199 2
+				}
+				else {
+d204 1
+d211 2
+a212 1
+		|| col > board[0].size() || board[0][col] == 0 || !take2 );
+d235 1
+a235 1
+trip Kayles::movePC( int turn, vector< trip > successor ){
+d246 2
+a247 2
+ * @@param p     - The number of pins left in the row.
+ *        b     - The current board.
+d251 1
+a251 1
+vector< trip > Kayles::findSuccessors( int p, vector< vector<int> > b ){
+d254 1
+a254 1
+	for ( int i = 1; i < 3; ++i ){
+d256 2
+a257 2
+		for ( int j = 0; j < b[0].size(); ++j ){
+			vector< vector<int> > newBoard( b );
+d266 1
+a266 1
+					trip( p-i,i,newBoard ));
+d277 1
+a277 1
+							trip( p-i,i,newBoard ));
+d289 1
+a289 1
+void Kayles::print(){
+d308 1
+a308 1
+string Kayles::getName( int p ){
+d324 1
+a324 1
+bool Kayles::checkBaseCase( vector< trip > check ){
+d337 1
+a337 1
+trip Kayles::baseCase(){
+d340 11
+@
+
+
+1.2
+log
+@added memoization
+@
+text
+@d1 47
+a47 23
+// $Id: KaylesGame.cpp,v 1.1 2012/10/17 21:46:42 jem4687 Exp jem4687 $
+//
+// Revisions:
+// $Log: KaylesGame.cpp,v $
+// Revision 1.1  2012/10/17 21:46:42  jem4687
+// Initial revision
+//
+// Revision 1.3  2012/10/17 21:43:02  mal4012
+// Added play feature.
+//
+// Revision 1.3  2012/10/17 01:38:41  mal4012
+// Changed base cases.
+//
+// Revision 1.2  2012/10/16 02:29:08  jem4687
+// added functionality to print
+//
+// Revision 1.1  2012/10/16 02:25:21  jem4687
+// Initial revision
+//
+//
+//
+// @@author:Jesse Martinez
+// @@author:Michael Loper
+d59 16
+a74 4
+// Creates a game of kayles between two players with a starting board.
+Kayles::Kayles( int , int pins , vector<char> b )
+	:Game( pins ),p1( "X","Human" ),p2( "O","PC" )
+{
+d78 10
+a87 4
+// Creates a game of kayles for the computer to solve with the starting board.
+Kayles::Kayles( int pins , vector<char> b )
+	:Game( pins ),p1( "X","Human" ),p2( "O","PC" )
+{
+d91 9
+a99 3
+//TODO
+void Kayles::generateBoard( vector<char> b )
+{
+d101 2
+a102 4
+	for( unsigned i = 0; i < b.size(); ++i )
+	{
+		int a = b[i] - 48;
+		for( unsigned int j = 0; j < a; ++j )
+d109 10
+a118 6
+// Calls correct move function depending on received player number
+// removes ammount of kayles the player chose
+void Kayles::move( int p )
+{
+	if ( p == 1 )
+	{
+d121 2
+a122 4
+		else
+		{
+			triple<int,int, vector< vector<int> > > pin=movePC
+				( 0,findSuccessors( getData(), board ));
+d128 1
+a128 2
+	else
+	{
+d131 2
+a132 4
+		else
+		{
+			triple<int,int,vector< vector<int> > > pin=movePC
+				( 0,findSuccessors( getData(), board ));
+d141 10
+a150 4
+// Move for human player asks user to choose an ammount from 1 to 2 if possible
+// @@return ammount of pennies chosen
+int Kayles::moveHuman( string p )
+{
+d154 1
+a154 2
+	do
+	{
+d156 1
+d162 2
+d166 5
+a170 4
+		else
+		{
+			cout << "Input column (if taking 2 pins choose"\
+				" left most column of pair)" << endl;
+d172 1
+d177 4
+a180 4
+				if ( (col+1) < board[0].size() )
+				{
+					if ( board[0][col+1] == 0 )
+					{
+d187 1
+a187 2
+				else
+				{
+d194 4
+a197 1
+	while ( num <=0 || num > 3 || (getData() - num) < 0 || col < 0
+d201 1
+d208 15
+a222 8
+// Move for pc player recursively goes through possible moves to find best
+// ammount of pins to take (defaults to 1 if there is no best ammount)
+// @@return a pair that holds the best score(score of best route)
+// and best move(ammount of pennies to take)
+triple< int, int, vector< vector<int> > > Kayles::movePC( int turn,
+vector< triple< int, int, vector< vector<int> > > > successor )
+{
+	triple< int, int, vector< vector<int> > > solved = solver( turn,successor );
+d227 16
+a242 10
+// Finds all possible successors based on board received
+// @@return vector of successors
+vector< triple< int, int, vector< vector<int> > > >
+	Kayles::findSuccessors( int p, vector< vector<int> > b )
+{
+	vector< triple< int, int, vector< vector<int> > > > successor;
+	for ( int i = 1; i < 3; ++i )
+	{
+		for ( int j = 0; j < b[0].size(); ++j )
+		{
+d244 1
+d246 4
+a249 2
+				if( newBoard[0][j] == 1 )
+				{
+d252 1
+a252 3
+						triple< int, int,
+						vector< vector<int> > >
+						( p-i, i, newBoard ));
+d254 2
+d259 1
+a259 2
+						if( newBoard[0][j+1] == 1 )
+						{
+d263 1
+a263 3
+							triple< int,int,vector<
+							vector<int> > >
+							( p-i, i, newBoard ));
+d270 7
+a276 5
+// Prints a X for each pin left and _ for missing pins
+void Kayles::print()
+{
+	for ( unsigned i = 0; i < board[0].size(); i++ )
+	{
+a282 1
+	//cout << "Pins left " << getData() << endl;
+d285 10
+a294 3
+// @@return player received name
+string Kayles::getName( int p )
+{
+d301 10
+a310 4
+// To do
+bool Kayles::checkBaseCase( vector< triple<int,int,
+				vector< vector<int> > > > check )
+{
+d314 10
+a323 3
+// To do
+triple<int,int, vector< vector<int> > > Kayles::baseCase()
+{
+d325 1
+a325 1
+	return triple<int,int,vector< vector<int> > >( -1,0,b );
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 1
+// $Id: KaylesGame.cpp,v 1.3 2012/10/17 21:43:02 mal4012 Exp jem4687 $
+d5 3
+d121 8
+a128 13
+			else
+				if( num == 2 )
+					if ( col+1 < board[0].size() )
+						if ( board[0][col+1] == 0 )
+						{
+							cerr << "Cant take"\
+							" 2 from this column"
+							<< endl;
+							take2 = false;
+						}
+					else
+						cerr << "Cant take 2 from this"
+							" column" << endl;
+d130 8
+a138 7
+	cout << num << endl;
+	cout << getData() << endl;
+	cout << ((getData() - num ) < 0) << endl;
+	cout << (col < 0) << endl;
+	cout << (col > board[0].size()) << endl;
+	cout << (board[0][col] == 0) << endl;
+	cout << !take2 << endl;
+d141 1
+a141 1
+		|| col > board[0].size() || board[0][col] == 0 || take2 );
+d144 1
+a144 1
+	board[0][col] == 0;
+d146 1
+a146 1
+		board[0][col+1] == 0;
+d157 3
+a159 1
+	return solver( turn,successor );
+@

@@ -1,0 +1,307 @@
+head	1.8;
+access;
+symbols;
+locks
+	jem4687:1.8; strict;
+comment	@ * @;
+
+
+1.8
+date	2012.10.16.02.25.21;	author jem4687;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	2012.10.15.22.05.03;	author jem4687;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	2012.10.15.21.40.40;	author jem4687;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	2012.10.15.19.24.29;	author jem4687;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	2012.10.15.17.23.16;	author jem4687;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	2012.10.10.22.30.06;	author jem4687;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	2012.10.10.20.51.23;	author jem4687;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2012.10.10.20.02.57;	author jem4687;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.8
+log
+@added a few things to make work with new game(changed findsuccessors)
+@
+text
+@// $Id: takeaway.h,v 1.7 2012/10/15 22:05:03 jem4687 Exp jem4687 $
+//
+// Revisions:
+// $Log: takeaway.h,v $
+// Revision 1.7  2012/10/15 22:05:03  jem4687
+// added generateBoard
+//
+// Revision 1.6  2012/10/15 21:40:40  jem4687
+// added triple container
+//
+// Revision 1.5  2012/10/15 18:05:07  mal4012
+// Changed a few formatting issues.
+//
+// Revision 1.4  2012/10/15 17:18:21  jem4687
+// changed pennies to data
+//
+// Revision 1.3  2012/10/10 22:30:06  jem4687
+// included inhetiance
+//
+// Revision 1.2  2012/10/10 20:51:23  jem4687
+// added functions for inheritance
+//
+// Revision 1.1  2012/10/10 20:02:57  jem4687
+// Initial revision
+//
+// Revision 1.10  2012/10/02 19:20:41  jem4687
+// removed include for player since not needed
+//
+// Revision 1.9  2012/10/02 19:13:05  jem4687
+// added comments
+//
+// Revision 1.8  2012/10/01 22:41:42  jem4687
+// testing
+//
+// Revision 1.7  2012/09/27 01:10:12  jem4687
+// remodeling with all functionality in takeaway
+//
+// Revision 1.6  2012/09/27 00:47:35  jem4687
+// debugging
+//
+// Revision 1.4  2012/09/23 21:22:48  jem4687
+// fixed some bugs so it compiles correctly
+//
+// Revision 1.3  2012/09/22 22:00:56  jem4687
+// added print and move functions
+//
+// Revision 1.2  2012/09/22 21:04:08  jem4687
+// Started
+//
+// Revision 1.1  2012/09/22 21:01:57  jem4687
+// Initial revision
+//
+//
+//
+//
+//
+//
+//
+// @@author:Jesse Martinez
+
+#ifndef TAKEAWAY_H
+#define TAKEAWAY_H
+
+#include <string>
+#include <iostream>
+#include <vector>
+#include <utility>
+#include "game.h"
+
+class Takeaway: public Game
+{
+	private:
+		// Pair that holds player character and player type 
+		std::pair<std::string,std::string> p1;
+		std::pair<std::string,std::string> p2;
+
+	public:
+		// Creates a game of takeaway between the
+		// computer and user with received pennies
+		Takeaway( int , int apennies );
+
+		// Creates a game of takeaway between two 
+		// computer players with received pennies
+		Takeaway( int apennies );
+
+		// Makes a move depending on which player number was reveived
+		void move( int p );
+
+		// Move for human player
+		// @@return integer of how many pennies user wishes to take
+		int moveHuman( std::string p );
+
+		// Move for pc player
+		// @@return pair holding player bestScore(route) and bestMove(pennies to take)
+		std::pair<int,int> movePC( int turn,std::vector<
+		triple<int,int,std::vector< std::vector<int> > > > successor);
+
+		// Creates all possible successors depending on penny ammount received
+		// @@return a vector of possible successors
+		std::vector< triple<int,int,std::vector< std::vector<int> > > > findSuccessors( int p, std::vector< std::vector<int> > );
+
+		// Prints out a O for each penny left
+		void print();
+
+		// @@return ammount of pennies left
+		int getPennies();
+
+		// @@return name of received player number
+		std::string getName( int );
+
+		bool checkBaseCase(std::vector< triple<int,int,std::vector< std::vector<int> > > > check);
+
+		std::pair<int,int> baseCase();
+
+		void generateBoard( std::vector<char> b );
+};
+
+#endif
+@
+
+
+1.7
+log
+@added generateBoard
+@
+text
+@d1 1
+a1 1
+// $Id: takeaway.h,v 1.6 2012/10/15 21:40:40 jem4687 Exp jem4687 $
+d5 3
+d95 1
+a95 1
+		std::pair<int,int> movePC( int turn,std::vector< 
+d100 1
+a100 1
+		std::vector< triple<int,int,std::vector< std::vector<int> > > > findSuccessors( int p );
+@
+
+
+1.6
+log
+@added triple container
+@
+text
+@d1 1
+a1 1
+// $Id: takeaway.h,v 1.5 2012/10/15 18:05:07 mal4012 Exp jem4687 $
+d5 3
+d111 2
+@
+
+
+1.5
+log
+@*** empty log message ***
+@
+text
+@d1 1
+a1 1
+// $Id: takeaway.h,v 1.4 2012/10/15 17:23:16 jem4687 Exp jem4687 $
+d5 5
+a9 2
+// Revision 1.4  2012/10/15 17:23:16  jem4687
+// added data calls instead of using pennies
+d64 1
+a64 1
+class takeaway:public game
+d74 1
+a74 1
+		takeaway( int , int apennies );
+d78 1
+a78 1
+		takeaway( int apennies );
+d89 2
+a90 1
+		std::pair<int,int> movePC( int turn,std::vector< std::pair<int,int> > successor);
+d94 1
+a94 1
+		std::vector< std::pair<int,int> > findSuccessors( int p );
+d99 3
+d105 1
+a105 1
+		bool checkBaseCase(std::vector< std::pair<int,int> > check);
+@
+
+
+1.4
+log
+@added data calls instead of using pennies
+@
+text
+@d1 1
+a1 1
+// $Id: takeaway.h,v 1.3 2012/10/10 22:30:06 jem4687 Exp jem4687 $
+d5 3
+a93 3
+
+		// @@return ammount of pennies left
+		int getPennies();
+@
+
+
+1.3
+log
+@included inhetiance
+@
+text
+@d1 1
+a1 1
+// $Id: takeaway.h,v 1.2 2012/10/10 20:51:23 jem4687 Exp jem4687 $
+d5 3
+a60 2
+		// Ammount of pennies left
+		int pennies;
+@
+
+
+1.2
+log
+@added functions for inheritance
+@
+text
+@d1 1
+a1 1
+// $Id: takeaway.h,v 1.1 2012/10/10 20:02:57 jem4687 Exp jem4687 $
+d5 3
+d53 1
+d55 1
+a55 1
+class takeaway
+a59 1
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 1
+// $Id: takeaway.h,v 1.10 2012/10/02 19:20:41 jem4687 Exp jem4687 $
+d5 3
+d79 1
+a79 1
+		std::pair<int,int> movePC( int turn,std::vector< std::pair<int,int> > successor, int i);
+d94 3
+@

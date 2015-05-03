@@ -1,0 +1,94 @@
+head	1.1;
+access;
+symbols;
+locks
+	jem4687:1.1; strict;
+comment	@ * @;
+
+
+1.1
+date	2012.10.16.02.25.21;	author jem4687;	state Exp;
+branches;
+next	;
+
+
+desc
+@created header for kayles
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@// $Id: $
+//
+// Revisions:
+// $Log: $
+//
+//
+//
+// @@author:Jesse Martinez
+// @@author:Michael Loper
+
+#ifndef KAYLES_H
+#define KAYLES_H
+
+#include <string>
+#include <iostream>
+#include <vector>
+#include <utility>
+#include "game.h"
+
+class Kayles: public Game
+{
+	private:
+		// Pair that holds player character and player type 
+		std::pair<std::string,std::string> p1;
+		std::pair<std::string,std::string> p2;
+
+	public:
+		// Creates a game of takeaway between the
+		// computer and user with received pennies
+		Kayles( int , int apennies , std::vector<char> b );
+
+		// Creates a game of takeaway between two 
+		// computer players with received pennies
+		Kayles( int apennies , std::vector<char> b );
+
+		// Makes a move depending on which player number was reveived
+		void move( int p );
+
+		// Move for human player
+		// @@return integer of how many pennies user wishes to take
+		int moveHuman( std::string p );
+
+		// Move for pc player
+		// @@return pair holding player bestScore(route) and bestMove(pennies to take)
+		std::pair<int,int> movePC( int turn,std::vector< 
+		triple<int,int,std::vector< std::vector<int> > > > successor);
+
+		// Creates all possible successors depending on penny ammount received
+		// @@return a vector of possible successors
+		std::vector< triple<int,int,std::vector< std::vector<int> > > > findSuccessors( int p, std::vector< std::vector<int> > );
+
+		// Prints out a O for each penny left
+		void print();
+
+		// @@return ammount of pennies left
+		int getPennies();
+
+		// @@return name of received player number
+		std::string getName( int );
+
+		bool checkBaseCase(std::vector< triple<
+			int,int,std::vector< std::vector<int> > > > check);
+
+		std::pair<int,int> baseCase();
+
+		void generateBoard( std::vector<char> b );
+};
+
+#endif
+@

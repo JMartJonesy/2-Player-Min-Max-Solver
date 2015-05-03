@@ -1,0 +1,301 @@
+head	1.5;
+access;
+symbols;
+locks
+	jem4687:1.5; strict;
+comment	@// @;
+
+
+1.5
+date	2012.10.16.02.27.10;	author jem4687;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	2012.10.15.21.38.49;	author jem4687;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	2012.10.15.17.23.16;	author jem4687;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	2012.10.10.22.30.06;	author jem4687;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2012.10.10.20.47.03;	author jem4687;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@added a few things for kayles
+@
+text
+@//
+// $Id: game.cpp,v 1.4 2012/10/15 21:38:49 jem4687 Exp jem4687 $
+//
+// Revisions:
+// $Log: game.cpp,v $
+// Revision 1.4  2012/10/15 21:38:49  jem4687
+// added new triple class
+//
+// Revision 1.4  2012/10/15 18:05:07  mal4012
+// Changed a few formatting issues.
+//
+// Revision 1.3  2012/10/15 17:25:27  mal4012
+// Changed commenting.
+//
+// Revision 1.2  2012/10/15 17:25:03  jem4687
+// *** empty log message ***
+//
+// Revision 1.3  2012/10/15 17:23:16  jem4687
+// added data calls instead of using pennies
+//
+// Revision 1.2  2012/10/10 22:30:06  jem4687
+// included inhetiance
+//
+// Revision 1.1  2012/10/10 20:47:03  jem4687
+// Initial revision
+//
+//
+//
+//
+//
+//
+//
+//
+// @@author:Jesse Martinez
+
+#include "game.h"
+#include <iostream>
+
+using namespace std;
+
+/**template <class T1, class T2, class T3> struct triple
+{
+  /**typedef T1 first_type;
+  typedef T2 second_type;
+  typedef T3 third_type;
+
+        T1 first;
+        T2 second;
+        T3 board;
+        triple()
+                : first( T1() ), second( T2() ), board( T3() ) {}
+        triple( const T1& x, const T2& y, const T3& z )
+                : first( x ), second( y ), board( z ) {}
+        template < class U, class V, class W >
+        triple (const triple< U,V,W > &p)
+                : first(p.first), second(p.second), board( p.board ) {}
+};
+*/
+
+Game::Game( int d )
+	:data(d)
+{}
+
+int Game::getData()
+{
+	return data;
+}
+
+void Game::changeData( int m )
+{
+	data=data-m;
+}
+
+bool Game::compareBoard( vector< vector<int> > board1, vector< vector<int> > board2 ){
+	bool isSame = true;
+	if(( board1.size() == board2.size() ) && ( board1[0].size() == board2[0].size() ))
+		for ( int i = 0; i < board1.size(); ++i )
+			for ( int j = 0; j < board1[0].size(); ++j )
+				if( board1[i][j] != board2[i][j] )
+					isSame = false;
+	else
+		isSame = false;
+	return isSame;
+}
+
+pair<int,int> Game::solver( int turn,
+				vector< triple< int,int,vector< vector<int> > > > successor)
+{
+	int bScore = -99;
+        int bMove = -99;
+        if ( checkBaseCase( successor ))
+        {
+		if( successor.size() == 1 )
+			memo.push_back( successor[0] );
+                return baseCase();
+        }
+        else
+        {
+		pair<int,int> score;
+                for ( int i = 0; i < successor.size(); i++)
+                {
+		//cout << "successor " << i << " " << successor[i].board[0][0];
+			bool in = false;
+			unsigned int n = 0;
+			while ( in == false && n < memo.size() ){
+				if(( successor[i].first == memo[n].first ) &&
+						( successor[i].second == memo[n].second ) &&
+						compareBoard( successor[i].board,
+						memo[n].board ))
+					in = true;
+				++n;
+			}
+			if( in )
+			{
+				for( int j = 0; j < scores.size(); j++ ){
+					if( scores[j].second == successor[i].first ){
+						score.first = scores[j].first;
+						break;
+					}
+				}
+			}
+			else
+			{
+				memo.push_back( successor[i] );
+cout << successor[i].second << " " << successor[i].board[0][0] << successor[i].board[0][1] << successor[i].board[0][2] << successor[i].board[0][3]<< " " << score.first << endl;
+
+				score = solver( turn++, findSuccessors( successor[i].first,successor[i].board));
+				score.first = -(score.first);
+				//cout << successor[i].second << " " << successor[i].board[0][0] << successor[i].board[0][1] << successor[i].board[0][2] << " " << score.first << endl;
+				pair<int,int> crazy( score.first,successor[i].first );
+				scores.push_back( crazy );
+
+			}
+                        if ( score.first > bScore )
+                        {
+                                bScore = score.first;
+                                bMove = successor[i].second;
+				board = successor[i].board;
+                        }
+                }
+                return pair<int,int>(bScore,bMove);
+        }
+}
+@
+
+
+1.4
+log
+@added new triple class
+@
+text
+@d2 1
+a2 1
+// $Id: game.cpp,v 1.4 2012/10/15 18:05:07 mal4012 Exp jem4687 $
+d6 3
+d94 1
+a94 1
+		memo.push_back( successor[0] );
+d102 1
+d125 3
+a127 1
+				score = solver( turn++, findSuccessors( successor[i].first));
+d129 1
+d137 2
+a138 1
+                                bMove = successor.at(i).second;
+@
+
+
+1.3
+log
+@added data calls instead of using pennies
+@
+text
+@d2 1
+a2 1
+// $Id: game.cpp,v 1.2 2012/10/10 22:30:06 jem4687 Exp jem4687 $
+d6 12
+d35 1
+d38 20
+a57 1
+game::game( int d )
+d61 1
+a61 1
+int game::getData()
+d66 1
+a66 1
+void game::changeData( int m )
+d71 14
+a84 1
+pair<int,int> game::solver( int turn, vector< pair<int,int> > successor)
+d88 1
+a88 1
+        if ( checkBaseCase(successor) )
+d102 4
+a105 2
+				if( (successor[i].first == memo[n].first) && 
+						(successor[i].second == memo[n].second) ) 
+d121 1
+a121 1
+				score = solver( turn++, findSuccessors( successor.at(i).first));
+@
+
+
+1.2
+log
+@included inhetiance
+@
+text
+@d2 1
+a2 1
+// $Id: game.cpp,v 1.1 2012/10/10 20:47:03 jem4687 Exp jem4687 $
+d6 3
+d22 1
+d25 14
+a42 1
+
+d45 2
+d51 1
+d54 24
+a77 4
+                        pair<int,int> score = solver( turn++, findSuccessors( successor.at(i).first));
+
+                        // Negates score
+                        score.first = -(score.first);
+d79 1
+a79 1
+                        // Compares new score to best score so far
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+// $Id: $
+d5 4
+a8 1
+// $Log: $
+d21 1
+a21 4
+game::~game()
+{}
+
+vector< pair<int,int> > game::solver( int turn, vector< pair<int,int> > successor)
+d26 1
+a26 1
+        if ( checkBaseCase )
+d28 1
+a28 1
+                return baseCase;
+d34 1
+a34 1
+                        pair<int,int> score = movePC( turn++, findSuccessors( successor.at(i).first));
+@

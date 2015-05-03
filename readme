@@ -1,0 +1,93 @@
+Jesse Martinez
+
+Takeaway:
+	1. It runs perfectly.
+	2. It always produces best move and position if there is one.
+	3. Yes it produces a 1 for a win or -1 for a loss.
+	4. Yes it plays against a human correctly.
+	5. Yes the answers are correct
+	6. No, it does segment fault when you put in a number around 35000
+	initial game though.
+	7. No leaks
+
+	- To run in solver mode just send a single integer
+	  to the command line.
+        - Send play and an integer to play a game against the computer.
+	  The game will prompt you for a amount of pennies to take
+	- ./takeaway [play] num_pennies
+        - Using inheritance with the solver in the Game class
+          Takeaway inherits from game and uses the Games solver.
+	- Moved solver into Game class
+	- Added memoization to speed up the solver.
+
+Kayles:
+	1. It runs perfectly.
+        2. It always produces best move and position if there is one.
+        3. Yes it produces a 1 for a win or -1 for a loss.
+        4. Yes it plays against a human correctly.
+        5. Yes the answers are correct
+        6. No, it does segment fault when you put in high ammounts of kayles for
+        initial game though.
+        7. No leaks
+
+	- To run in solver mode just send integers with spaces for
+          number of kayles in a row to the command line.
+        - Send play and an integer and a integers with spaces to play against computer.
+          The game will prompt you for columns to remove kayles from.
+        - ./kayles [play] num_pins num_pins2......
+        - Using inheritance with the solver in the Game class
+          Kayles inherits from game and uses the Games solver.
+        - Moved solver into Game class
+        - Added memoization to speed up the solver.
+
+
+Connect3:
+
+	1. It runs perfectly.
+        2. It always produces best move and position if there is one.
+        3. Yes it produces a +score for a win and -score for a loss.
+        4. Yes it plays against a human correctly.
+        5. Yes the answers are correct
+        6. No, it does segment fault if you put in a big empty board.
+        7. No leaks
+
+	- To run in solver mode just send a - or a file to create 
+	  board from to the command line.
+	- When using a - user will be prompted for a width and height.
+	  Then an initial board all in one line
+	  Ex) Enter width: 4
+	      Enter height: 3
+	      Enter initial board: ........XX..
+	      will generate
+		....
+		....
+		XX..
+        - Send play and a - or file to play a game against the computer.
+          The game will prompt you for a column to place a piece.
+        - ./connect3 [play] num_pennies
+        - Using inheritance with the solver in the Game class
+          Connect3 inherits from game and uses the Games solver.
+        - Moved solver into Game class
+        - Added memoization to speed up the solver.
+
+
+Crossout:
+	1. It runs perfectly.
+        2. It always produces best move and position if there is one.
+        3. Yes it produces a 1 for a win or -1 for a loss.
+        4. Yes it plays against a human correctly.
+        5. Yes the answers are correct
+        6. No, it does segment fault when you put in high amounts of Max_num 
+	and Max_sum for initial game.
+        7. No leaks
+
+	- To run in solver mode just send two integers
+          in the command line, first number is max number
+	  and second is the max sum of numbers.
+        - Send play and two integers to play against computer.
+          The game will prompt you for numbers to take.
+        - ./crossout [play] max_num max_sum
+        - Using inheritance with the solver in the Game class
+          Crossout inherits from game and uses the Games solver.
+        - Moved solver into Game class
+        - Added memoization to speed up the solver.

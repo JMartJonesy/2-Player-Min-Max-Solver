@@ -1,0 +1,132 @@
+/**
+ * Name: crossout.cpp
+ * Description: The main for a Crossout Game.
+ *
+ * $Id: crossout.cpp,v 1.2 2012/11/07 19:10:46 jem4687 Exp jem4687 $
+ *
+ * Revisions:
+ * $Log: crossout.cpp,v $
+ * Revision 1.2  2012/11/07 19:10:46  jem4687
+ * Pretty up the comments
+ *
+ * Revision 1.1  2012/11/03 02:00:56  jem4687
+ * Initial revision
+ *
+ *
+ * @author:Jesse Martinez
+ */
+
+#include <sstream>
+#include <iostream>
+#include <cstdlib>
+#include <cassert>
+#include <cstring>
+
+#include "CrossoutGame.h"
+#include "Game.h"
+
+using namespace std;
+
+/**
+ * Name: main
+ *
+ * Description:  Creates and runs a Crossout Game.
+ *
+ * @param argc   - The number of arguments entered.
+ *        argv[] - A pointer to an array of chars representing the arguments
+ *                 entered.
+ *
+ * @return       0, to indicate a smooth program execution.
+ */
+int main( int argc, const char* argv[] )
+{
+	const char* PLAY("play");
+	// Must receive 3 or 4 arguments
+	if ( argc < 3 || argc > 4 ){
+		cerr << "Usage: " << argv[0] << " [play] max_num max_sum";
+		cout << endl;
+		return 0;
+	}
+	else {
+		int max;
+        	int num;
+		stringstream ss;
+		stringstream ss2;
+		if( argc == 3 ){
+        		ss << argv[2];
+        		ss2 << argv[1];
+		}
+		else{
+			ss << argv[3];
+                        ss2 << argv[2];
+		}
+        	ss >> max;
+        	ss2 >> num;
+
+		if( !max || !num ){
+			cerr << "Usage: " << argv[0] << " [play] max_num max_sum";
+                	cout << endl;
+                	return 0;
+		}
+
+		// If the first argument given is not play enter solver mode.
+		if( argc == 3 ){
+			// Create the game using Max_num and Max_sum given.
+			CrossoutGame c( max, num );
+			cout << "Initial board :" << endl;
+                        c.print();
+
+			// Find the best possible move, score, and
+			// board.
+			triple<int,int,vector< vector<int> > >
+			b( c.getData(), 0 , c.board );
+			triple<int,int,vector< vector<int> > > moved =
+			c.movePC( 0,c.findSuccessors( b ));
+			c.board = moved.board;
+
+			// Print the best move if the score is
+			// positive otherwise default move is to take first number.
+			if ( moved.first == 1 ){
+				cout << "Best ammount of numbers to take"\
+				" is " << moved.second << endl;
+				cout << "With a board of :" << endl;;
+				c.print();
+			}
+			else {
+				cout << "Score is " << moved.first << \
+				" so default move to take first number" << endl;
+			}
+		}
+
+		// If we see the word play enter interactive mode.
+		else if( !strcmp( PLAY,argv[1] )){
+			// Create the game using Max_num and Max_sum given.
+                        CrossoutGame c( max, num );
+			cout << "Initial board :" << endl;
+			c.print();
+
+			// Play the game.
+			int turn = 0;
+			while ( c.getData() !=0 ){
+				if ( turn % 2 == 0 )
+					c.move( 1 );
+				else
+					c.move( 2 );
+				++turn;
+			}
+			// Print out the loser.
+			if (( turn-1 ) % 2 == 1 )
+		        	cout << "Player " << c.getName( 1 )
+					<< " loses" << endl;
+               		else
+                        	cout << "Player " << c.getName( 2 )
+					<< " loses" << endl;
+		}
+		else {
+			// Print usage statement for bad arguments.
+			cerr << "Usage: " << argv[0] << " [play] max_num max_sum";
+	                cout << endl;
+		}
+	}
+	return 0;
+}
